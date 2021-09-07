@@ -1,1 +1,2 @@
 - FAST terminal: https://www.youtube.com/watch?v=jR-SqXLgBNo
+- https://github.com/slu4coder/Minimal-Terminal
