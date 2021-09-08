@@ -5,6 +5,15 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 
+ #define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+#define min(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
+
 char row = 0, col = 0;            // current cursor position in terminal window
 volatile int vline = 0;           // current vertical position of pixel video output
 volatile unsigned char vram[HEIGHT][WIDTH];// array of VideoRAM
@@ -72,7 +81,7 @@ void setup()
 
   UCSR0B = 0;                       // brute-force the USART off just in case...
 
-  memset((void*)vram, 32, WIDTH * HEIGHT);   // clear the entire VRAM
+  memset((void*)vram, ' ', WIDTH * HEIGHT);   // clear the entire VRAM
 }
 
 void loop()
@@ -83,7 +92,7 @@ void loop()
   if (regout != regin)                            // was a character received
   {
     if (col < WIDTH) vram[row][col] &= 0b01111111;   // restore character beneath the cursor BEFORE a possible scrolling happens
-    // do ProcessChar(reg[regout++]); while (regout != regin);  // process the character
+    do ProcessChar(reg[regout++]); while (regout != regin);  // process the character
   }
 }
 
@@ -101,3 +110,163 @@ int main()
 }
 
 ISR(TIMER1_OVF_vect) { vline = 0; frames++; }     // timer1 overflow interrupt resets vline at HSYNC
+
+void ProcessChar(unsigned char inbyte)                    // processes a character (accepts some VT52/GEMDOS ESC sequences, control chars, normal chars)
+{
+  static unsigned char escvalid = 0;                // Number of valid characters in escbuffer[]
+  static unsigned char escbuffer[5] = { 0,0,0,0,0 };
+
+  frames = 30;                                   // make cursor invisible for a very short time after receiving a character
+
+  if (escvalid > 4) escvalid = 0;                // unverarbeitbare ESC-Sequenzen löschen und dieses Zeichen normal verarbeiten
+  if (inbyte == 27) { escvalid = 1; return; }    // neue ESC sequence starten
+
+  if (escvalid > 0)                              // ES IST BEREITS EIN ESC AKTIV
+  {
+    if (escvalid < 2)
+    {
+      if (inbyte == '[') escvalid++;             // als 2. Zeichen MUSS '[' kommen
+      else escvalid = 0;
+    }
+    else                                         // es wurde bereits '\e[' korrekt empfangen...
+    {
+      escbuffer[escvalid++] = inbyte;            // ein weiteres Zeichen hinzufügen
+      switch (inbyte)                            // Für jede ESC sequence muss geprüft werden, ob damit der Befehl komplett ist
+      {
+        case 'S':
+          memset((void*)&vram[start][0], 32, WIDTH);
+          start++; if (start > HEIGHT-1) start = 0;
+          row++; if (row > HEIGHT-1) row = 0;
+          break;
+        case 'T':
+          start--; if (start < 0) start = HEIGHT-1;
+          row--; if (row < 0) row = HEIGHT-1;
+          memset((void*)&vram[start][0], 32, WIDTH);
+          break;
+        case 'A':                                // move cursor up
+        {
+          unsigned char anz;
+          if (escvalid > 4) { anz = (escbuffer[2] - 48) << 1; anz += (anz << 2) + escbuffer[3] - 48; }
+          else if (escvalid == 4) anz = escbuffer[2] - 48; else anz = 1;
+          for (unsigned char i = 0; i < anz; i++) if (row != start) { row--; if (row < 0) row = HEIGHT-1; }
+          escvalid = 0; break;
+        }
+        case 'B':                                // move cursor down
+        {
+          unsigned char anz;
+          if (escvalid > 4) { anz = (escbuffer[2] - 48) << 1; anz += (anz << 2) + escbuffer[3] - 48; }
+          else if (escvalid == 4) anz = escbuffer[2] - 48; else anz = 1;
+          for (unsigned char i = 0; i < anz; i++) { unsigned char oldrow = row; row++; if (row > HEIGHT-1) row = 0; if (row == start) row = oldrow; }
+          escvalid = 0; break;
+        }
+        case 'C':                                // move cursor right
+        {
+          unsigned char anz;
+          if (escvalid > 4) { anz = (escbuffer[2] - 48) << 1; anz += (anz << 2) + escbuffer[3] - 48; }
+          else if (escvalid == 4) anz = escbuffer[2] - 48; else anz = 1;
+          for (unsigned char i = 0; i < anz; i++) if (col < WIDTH-1) col++;
+          escvalid = 0; break;
+        }
+        case 'D':                                // move cursor left
+        {
+          unsigned char anz;
+          if (escvalid > 4) { anz = (escbuffer[2] - 48) << 1; anz += (anz << 2) + escbuffer[3] - 48; }
+          else if (escvalid == 4) anz = escbuffer[2] - 48; else anz = 1;
+          for (unsigned char i = 0; i < anz; i++) if (col > 0) col--;
+          escvalid = 0; break;
+        }
+        case 'G':                                // move cursor to an absolute x position (left border: 1)
+        {
+          unsigned char anz;
+          if (escvalid > 4) { anz = (escbuffer[2] - 48) << 1; col = min(WIDTH-1, max(0, (anz << 2) + anz + escbuffer[3] - 48 - 1)); }
+          else if (escvalid == 4) { col = min(WIDTH-1, max(0, escbuffer[2] - 48 - 1)); }
+          else col = 0;
+          escvalid = 0; break;
+        }
+        case 'd':                                // move cursor to an absolute x position (left border: 1)
+        {
+          unsigned char anz;
+          if (escvalid > 4)
+          {
+            anz = (escbuffer[2] - 48) << 1;
+            row = start + min(HEIGHT-1, max(0, (anz << 2) + anz + escbuffer[3] - 48 - 1));
+            if (row > HEIGHT-1) row -=HEIGHT;
+          }
+          else if (escvalid == 4)
+          {
+            row = start + min(HEIGHT-1, max(0, escbuffer[2] - 48 - 1));
+            if (row > HEIGHT-1) row -=HEIGHT;
+          }
+          else row = start;
+          escvalid = 0; break;
+        }
+        case 'H':                                // move cursor to upper left corner
+          row = start; col = 0;
+          escvalid = 0; break;
+        case 'J':                                // clear VRAM from cursor onwards
+        {
+          memset((void*)&vram[row][col], 32, WIDTH-col);
+          unsigned char r = row;
+          do { if (++r > HEIGHT-1) r = 0; memset((void*)&vram[r][0], 32, WIDTH); } while (r != start);
+          escvalid = 0; break;
+        }
+        case 'K':                                // clear line from cursor onwards (does not move the cursor)
+          memset((void*)&vram[row][col], 32, WIDTH-col);
+          escvalid = 0; break;
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': break;    // add numbers to ESC sequence
+        default: escvalid = 0; break;            // all other chars -> end ESC sequence
+      }
+    }
+  }
+  else                                           // NO ESC SEQUENCE => ORDINARY CHARACTER
+  {
+    switch (inbyte)
+    {
+      case '\r': col = 0; break;                // Sonderzeichen 'carriage return' abfangen        
+      case '\n':                                 // Sonderzeichen 'newline' abfangen
+        col = 0;
+        if (row < HEIGHT-1) row++; else row=0;
+        if (row == start) { memset((void*)&vram[row][0], 32, WIDTH); start++; if (start > HEIGHT-1) start = 0; }
+        break;
+      case 8:                                   // Sonderzeichen 'BACKSPACE' abfangen
+        if (col > 0) vram[row][--col] = 32;
+        else if (row != start) { if (row > 0) row--; else row = HEIGHT-1; vram[row][WIDTH-1] = 32; col = WIDTH-1; }
+        break;
+      default:
+        if (inbyte >= 32)                       // start of printable characters
+        {
+          if (col > WIDTH-1)
+          {
+            col = 0;
+            if (row < HEIGHT-1) row++; else row=0;
+            memset((void*)&vram[row][0], 32, WIDTH);
+            if (row == start) { start++; if (start > HEIGHT-1) start = 0; }
+          }
+          vram[row][col++] = inbyte;             // Zeichen im Terminal ausgeben
+        }
+        break;
+    }
+  }
+}
+
+/*
+-----------
+MIT License
+-----------
+Copyright (c) 2021 Carsten Herting
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
