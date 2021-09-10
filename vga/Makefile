@@ -1,4 +1,4 @@
-PROJECT=fortuna-terminal
+PROJECT=fortuna-terminal-vga
 OBJECTS=main.o asm.o
 AVRDUDE_FLAGS=-p atmega328p -C ./avrdude_gpio.conf -c pi_1 -B 0.5 -V
 FUSES=-U efuse:w:0xff:m -U hfuse:w:0xd9:m -U lfuse:w:0xbf:m   # external crystal
