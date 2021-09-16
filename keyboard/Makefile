@@ -1,7 +1,7 @@
-PROJECT=fortuna-terminal-uart
+PROJECT=fortuna-terminal-keyboard
 OBJECTS=main.o
 AVRDUDE_FLAGS=-p atmega328p -C ./avrdude_gpio.conf -c pi_1 -B10 -b 125000 -V
-FUSES=-U efuse:w:0xff:m -U hfuse:w:0xd9:m -U lfuse:w:0xe0:m   # external clock from VGA uc
+FUSES=-U efuse:w:0xff:m -U hfuse:w:0xd9:m -U lfuse:w:0xe2:m   # external clock from VGA uc
 MCU=atmega328p
 F_CPU=24000000UL
 
