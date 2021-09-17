@@ -21,6 +21,9 @@ ${PROJECT}.elf: ${OBJECTS}
 	$(CC) -mmcu=${MCU} -o $@ $^ -Wl,--gc-sections
 	avr-size -C --mcu=${MCU} ${PROJECT}.elf	
 
+size: ${PROJECT}.elf
+	avr-size -C --mcu=${MCU} ${PROJECT}.elf	
+
 test-connection:
 	sudo avrdude ${AVRDUDE_FLAGS}
 

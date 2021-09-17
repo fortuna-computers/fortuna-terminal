@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 
 // AVR PD2 (INT0) = PS/2 CLK
@@ -18,32 +19,19 @@ void ps2_initialize()
     cli();
     GIMSK = (1 << INT0);   // Enable INT0
     MCUCR = (1 << ISC01);  // The falling edge of INT0 generates an interrupt request
-    sei();
 
     // setup timer to every 1 ms
-    TCCR0A = (1 << WGM01);   // set CTC
-    TCCR0B = (1 << CS00);  // no prescaler
-    OCR0A = 24;  // 1 ms
-    TIMSK = (1 << OCIE0A);  // fire interrupt on TIMER0 match
+    OCR0A = 92;               // 1 ms
+    TCCR0A |= (1 << WGM01);   // set CTC
+    TCCR0B |= (1 << CS02);    // prescaler 1/256
+    TIMSK = (1 << OCIE0A);    // fire interrupt on TIMER0 match
+    sei();
 }
 
 int ps2_new_data()
 {
     if (ps2_last_data != -1) {
-        if (ps2_last_data & 1 != 0) {  // start bit
-            uart_putchar('!'); for(;;);
-        }
-
-        if (ps2_last_data & (1 << 11) != 1) {  // stop bit
-            uart_putchar('@'); for(;;);
-        }
-
         int16_t tmp = (ps2_last_data >> 1) & 0xff;
-
-        if (tmp % 2 == ps2_last_data & (1 << 10)) {  // parity
-            uart_putchar('#'); for(;;);
-        }
-
         ps2_last_data = -1;
         return tmp;
     }
