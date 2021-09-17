@@ -1,13 +1,15 @@
 #include "uart.h"
+#include "ps2.h"
 
 int main()
 {
     uart_initialize();
-    // print_hex(0x42);
+    ps2_initialize();
 
     for (;;) {
-        uart_getchar();
-        uart_puthex(0xAF);
+        int d = ps2_new_data();
+        if (d != -1)
+            uart_puthex((uint8_t) d);
     }
     return 0;
 }

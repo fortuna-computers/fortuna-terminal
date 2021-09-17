@@ -39,5 +39,6 @@ void uart_puthex(uint8_t v)
 {
     uart_puthex_v(v >> 4);
     uart_puthex_v(v & 0xf);
+    uart_putchar(' ');
 }
 
