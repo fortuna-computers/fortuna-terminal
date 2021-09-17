@@ -33,7 +33,7 @@ int ps2_new_data()
 
         int16_t tmp = (ps2_last_data >> 1) & 0xff;
 
-        if (tmp % 2 == ps2_last_data & (1 << 10)) {
+        if (tmp % 2 == ps2_last_data & (1 << 10)) {  // parity
             uart_putchar('#'); for(;;);
         }
 
