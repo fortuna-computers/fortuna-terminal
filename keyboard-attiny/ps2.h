@@ -1,7 +1,7 @@
 #ifndef PS2_H_
 #define PS2_H_
 
-#include <stdint.h>
+#define NO_DATA 0x24
 
 void ps2_initialize();
 

@@ -11,7 +11,7 @@
 
 static volatile uint16_t ps2_data = 0;
 static volatile uint8_t  ps2_size = 0;
-static volatile int16_t  ps2_last_data = -1;
+static volatile int      ps2_last_data = NO_DATA;
 
 void ps2_initialize()
 {
@@ -25,29 +25,31 @@ void ps2_initialize()
     TCCR0A |= (1 << WGM01);   // set CTC
     TCCR0B |= (1 << CS02);    // prescaler 1/256
     TIMSK = (1 << OCIE0A);    // fire interrupt on TIMER0 match
+
     sei();
 }
 
 int ps2_new_data()
 {
-    if (ps2_last_data != -1) {
-        int16_t tmp = (ps2_last_data >> 1) & 0xff;
-        ps2_last_data = -1;
+    if (ps2_last_data != NO_DATA) {
+        int tmp = (ps2_last_data >> 1) & 0xff;
+        ps2_last_data = NO_DATA;
         return tmp;
     }
 
-    return -1;
+    return NO_DATA;
 }
 
 ISR(INT0_vect)   // interrupt when clock line is pulled low
 {
     if (ps2_size < 10) {
         uint8_t data = (PIND & (1 << PIND3)) ? 1 : 0;
-        if (data)
+        if (data) {
             ps2_data |= (1 << ps2_size);
+        }
         ++ps2_size;
     } else {
-        ps2_last_data = (int16_t) ps2_data;
+        ps2_last_data = (int) ps2_data;
         ps2_size = 0;
         ps2_data = 0;
     }
@@ -60,6 +62,6 @@ ISR(TIMER0_COMPA_vect)   // interrupt when timer reaches 1 ms
     // 1 ms without communcation - resets everything
     ps2_size = 0;
     ps2_data = 0;
-    ps2_last_data = -1;
+    ps2_last_data = NO_DATA;
     TCNT0 = 0;  // reset timer
 }
