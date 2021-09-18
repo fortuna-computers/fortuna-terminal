@@ -14,6 +14,8 @@ CPPFLAGS=-std=c11 -Wall -Wextra -Os -DF_CPU=${F_CPU} -mmcu=${MCU} -ffunction-sec
 
 all: ${PROJECT}.hex
 
+ps2.o: scancodes.c
+
 ${PROJECT}.hex: ${PROJECT}.elf
 	avr-objcopy -j .text -j .data -O ihex $< $@
 	arm-linux-gnueabihf-size ${PROJECT}.hex

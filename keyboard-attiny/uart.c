@@ -27,6 +27,13 @@ uint8_t uart_getchar()
     return UDR;
 }
 
+void uart_putstr(const char* s)
+{
+    int i = 0;
+    while (s[i])
+        uart_putchar(s[i++]);
+}
+
 static void uart_puthex_v(uint8_t v)
 {
     if (v <= 9)
