@@ -1,10 +1,10 @@
 PROJECT=fortuna-terminal-keyboard
 OBJECTS=main.o uart.o ps2.o
 AVRDUDE_FLAGS=-p attiny2313 -C ./avrdude_gpio.conf -c pi_1 -B 0.5 -V
-FUSES=-U efuse:w:0xff:m -U hfuse:w:0xdf:m -U lfuse:w:0xe0:m   # external clock from VGA uc
+FUSES=-U efuse:w:0xff:m -U hfuse:w:0xdf:m -U lfuse:w:0x60:m   # external clock from VGA uc, divide by 8
 ROLLBACK_FUSES=-U lfuse:w:0x64:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
 MCU=attiny2313a
-F_CPU=24000000UL
+F_CPU=3000000UL
 
 CC=avr-gcc
 CPPFLAGS=-std=c11 -Wall -Wextra -Os -DF_CPU=${F_CPU} -mmcu=${MCU} -ffunction-sections -fdata-sections -I../common
@@ -41,5 +41,9 @@ fuse:
 
 rollback-fuse:
 	sudo avrdude ${AVRDUDE_FLAGS} ${ROLLBACK_FUSES}
+
+talk:
+	@echo "To exit, type ~."
+	cu -l /dev/ttyAMA0 -s 38400
 
 # vim: set ts=8 sts=8 sw=8 noexpandtab:

@@ -5,7 +5,7 @@
 void uart_initialize()
 {
     // set baud rate - http://ruemohr.org/~ircjunk/avr/baudcalc/avrbaudcalc-1.0.8.php?postbitrate=38400&postclock=24
-    int ubrr = 38;       // 38400 at 24 Mhz
+    int ubrr = 4;       // 38400 at 3 Mhz
     UBRRH = (ubrr>>8);
     UBRRL = (ubrr);
 

@@ -16,6 +16,7 @@ static volatile uint16_t ps2_data = 0;
 static volatile uint8_t  ps2_size = 0;
 static volatile int      ps2_last_data = NO_DATA;
 static volatile int      ps2_ignore_next = 0;
+static volatile bool     ps2_reset = false;
 
 static volatile struct {
     bool    last_was_special : 1;
@@ -98,9 +99,9 @@ void ps2_initialize()
     MCUCR = (1 << ISC01);  // The falling edge of INT0 generates an interrupt request
 
     // setup timer to every 1 ms
-    OCR0A = 92;               // 1 ms
+    OCR0A = 45;               // 1 ms
     TCCR0A |= (1 << WGM01);   // set CTC
-    TCCR0B |= (1 << CS02);    // prescaler 1/256
+    TCCR0B |= (1 << CS01) | (1 << CS00);    // prescaler 1/64
     TIMSK = (1 << OCIE0A);    // fire interrupt on TIMER0 match
 
     sei();
@@ -115,6 +116,14 @@ void ps2_tick()
         if (ps2_parse_special_chars(data))
             return;
         ps2_translate(data);
+    }
+
+    if (ps2_reset) {
+        ps2_size = 0;
+        ps2_data = 0;
+        ps2_last_data = NO_DATA;
+        ps2_reset = false;
+        TCNT0 = 0;  // reset timer
     }
 }
 
@@ -138,8 +147,5 @@ ISR(INT0_vect)   // interrupt when clock line is pulled low
 ISR(TIMER0_COMPA_vect)   // interrupt when timer reaches 1 ms
 {
     // 1 ms without communcation - resets everything
-    ps2_size = 0;
-    ps2_data = 0;
-    ps2_last_data = NO_DATA;
-    TCNT0 = 0;  // reset timer
+    ps2_reset = true;
 }
