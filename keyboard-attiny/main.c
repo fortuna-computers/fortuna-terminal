@@ -1,5 +1,6 @@
 #include "uart.h"
 #include "ps2.h"
+#include "videoout.h"
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -27,6 +28,7 @@ int main()
     */
 
     ps2_initialize();
+    video_out_init();
 
     // uart_putchar('|');
 

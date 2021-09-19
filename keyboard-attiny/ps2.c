@@ -1,8 +1,3 @@
-/* TODO:
- *   - caps lock
- *   - num lock
- */
-
 #include "ps2.h"
 
 #include <avr/io.h>
