@@ -19,7 +19,7 @@ static const PS2_Scancode ps2_scancodes[] PROGMEM = {
     { 0x46, '9',  '(' },
     { 0x45, '0',  ')' },
     { 0x4e, '-',  '_' },
-    { 0x55, '_',  '+' },
+    { 0x55, '+',  '=' },
     { 0x66, 127,  0   },
 
     { 0x0d, '\t', 0   },
@@ -60,10 +60,27 @@ static const PS2_Scancode ps2_scancodes[] PROGMEM = {
     { 0x41, ',',  '<' },
     { 0x49, '.',  '>' },
     { 0x4a, ';',  ':' },
+    { 0x51, '/',  '?' },
 
-    { 0x29, ' ', 0    },
+    { 0x29, ' ',  0   },
 
-    { 0x00,  0 ,   0  }
+    { 0x7c, '*',  0   },
+    { 0x7b, '-',  0   },
+    { 0x6c, '7',  0   },
+    { 0x75, '8',  0   },
+    { 0x7d, '9',  0   },
+    { 0x79, '+',  0   },
+    { 0x6b, '4',  0   },
+    { 0x73, '5',  0   },
+    { 0x74, '6',  0   },
+    { 0x69, '1',  0   },
+    { 0x72, '2',  0   },
+    { 0x7a, '3',  0   },
+    { 0x70, '0',  0   },
+    { 0x71, ',',  0   },
+    { 0x6d, '.',  0   },
+
+    { 0x00,  0 ,  0   }
 };
 
 typedef struct __attribute__((__packed__)) {
@@ -119,6 +136,9 @@ static const PS2_ScancodeSpecial ps2_scancodes_special[] PROGMEM = {
     { 0x71, SEQ_DELETE },
     { 0x69, SEQ_END },
     { 0x7a, SEQ_PGDOWN },
+
+    { 0x4a, "/" },
+    { 0x5a, "\n" },
 
     { 0x00, 0 }
 };
