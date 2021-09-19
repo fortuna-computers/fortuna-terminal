@@ -8,9 +8,9 @@
 
 int main()
 {
-    _delay_ms(200);
+    _delay_ms(50);
     uart_initialize();
-    _delay_ms(200);
+    _delay_ms(50);
 
     /*
     if(MCUSR & (1<<WDRF )) uart_putchar('%');
@@ -29,11 +29,13 @@ int main()
 
     ps2_initialize();
     video_out_init();
+    _delay_ms(50);
 
     // uart_putchar('|');
 
     for (;;) {
         ps2_tick();
+        uart_tick();
     }
 
     return 0;

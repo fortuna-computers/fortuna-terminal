@@ -2,6 +2,8 @@
 
 #include <avr/io.h>
 
+#include "videoout.h"
+
 void uart_initialize()
 {
     // set baud rate - http://ruemohr.org/~ircjunk/avr/baudcalc/avrbaudcalc-1.0.8.php?postbitrate=38400&postclock=24
@@ -49,3 +51,9 @@ void uart_puthex(uint8_t v)
     uart_putchar(' ');
 }
 
+void uart_tick()
+{
+    if (UCSRA & (1<<RXC)) {
+        video_out(UDR);
+    }
+}
