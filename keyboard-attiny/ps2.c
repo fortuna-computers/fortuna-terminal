@@ -1,3 +1,8 @@
+/* TODO:
+ *   - caps lock
+ *   - num lock
+ */
+
 #include "ps2.h"
 
 #include <avr/io.h>
@@ -72,7 +77,7 @@ static char ps2_translate(uint8_t data)
         if (sc.data == 0x0)
             break;
 
-        if (data == sc.data && ps2_state.last_was_special == sc.special) {
+        if (data == sc.data) {
             if (ps2_state.shifted && sc.shifted) {
                 uart_putchar(sc.shifted);
             } else {
@@ -82,7 +87,22 @@ static char ps2_translate(uint8_t data)
         ++i;
     }
 
-    // TODO - keys (1 byte input / n byte output)
+    // manage special keys (1 byte input / n byte output)
+    i = 0;
+    for (;;) {
+        PS2_ScancodeSpecial sc;
+        memcpy_P(&sc, &ps2_scancodes_special[i], sizeof(PS2_ScancodeSpecial));
+        if (sc.data == 0x0)
+            break;
+
+        if (data == sc.data && ps2_state.last_was_special) {
+            char buf[10] = { 0 };
+            strncpy_P(buf, sc.sequence, 9);
+            for (char* p = buf; *p; ++p)
+                uart_putchar(*p);
+        }
+        ++i;
+    }
 
 done:
     ps2_state.last_was_special = false;
