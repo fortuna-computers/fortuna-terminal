@@ -1,15 +1,12 @@
 PROJECT=fortuna-terminal-vga
 OBJECTS=main.o asm.o
-AVRDUDE_FLAGS=-p atmega328p -C ./avrdude_gpio.conf -c pi_1 -B 0.5 -V
+AVRDUDE_FLAGS=-p atmega328p -C +./avrdude_gpio.conf -c pi_1 -B 0.5 -V
 FUSES=-U efuse:w:0xff:m -U hfuse:w:0xd9:m -U lfuse:w:0xbf:m   # external crystal
 MCU=atmega328p
 F_CPU=24000000UL
 
 CC=avr-gcc
 CPPFLAGS=-std=c11 -Wall -Wextra -Os -DF_CPU=${F_CPU} -mmcu=${MCU} -ffunction-sections -fdata-sections -I../common
-# CPPFLAGS+=-DRUN_TESTS  # execute tests on initialization
-# CPPFLAGS+=-DDEBUG      # print debugging information during execution
-# CPPFLAGS+=-DSTEP       # wait for a keypress before each step
 
 all: ${PROJECT}.hex
 

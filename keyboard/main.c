@@ -12,7 +12,6 @@ int main()
     uart_initialize();
     _delay_ms(50);
 
-    /*
     if(MCUSR & (1<<WDRF )) uart_putchar('%');
     if(MCUSR & (1<<BORF )) uart_putchar('$');
     if(MCUSR & (1<<PORF )) uart_putchar('@');
@@ -25,13 +24,12 @@ int main()
     _delay_ms(200);
     
     uart_putchar('|');
-    */
 
     ps2_initialize();
     video_out_init();
     _delay_ms(50);
 
-    // uart_putchar('|');
+    uart_putchar('|');
 
     for (;;) {
         ps2_tick();

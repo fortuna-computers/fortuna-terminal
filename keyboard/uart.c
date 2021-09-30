@@ -1,15 +1,17 @@
 #include "uart.h"
 
 #include <avr/io.h>
+#include <util/setbaud.h>
 
 #include "videoout.h"
 
 void uart_initialize()
 {
-    // set baud rate - http://ruemohr.org/~ircjunk/avr/baudcalc/avrbaudcalc-1.0.8.php?postbitrate=38400&postclock=24
-    int ubrr = 4;       // 38400 at 3 Mhz
-    UBRRH = (ubrr>>8);
-    UBRRL = (ubrr);
+    /*
+    UBRRH = UBRRH_VALUE;
+    UBRRL = UBRRL_VALUE;
+    */
+    UBRRL = 4;    // BAUD 38400 - http://ruemohr.org/~ircjunk/avr/baudcalc/avrbaudcalc-1.0.8.php?postbitrate=38400&postclock=3&bit_rate_table=on
 
     // set config
     UCSRC = (1<<UCSZ1) | (1<<UCSZ0);   // Async-mode 
