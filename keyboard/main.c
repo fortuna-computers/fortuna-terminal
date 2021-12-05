@@ -6,6 +6,8 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
+#define HALT_CHAR 1
+
 int main()
 {
     _delay_ms(50);
@@ -19,7 +21,7 @@ int main()
     MCUSR = 0;
 
     DDRD &= ~(1 << DDD4);
-    PORTD |= (1 << PD4);
+    PORTD |= (1 << PORTD4);
 
     _delay_ms(200);
     
@@ -34,8 +36,11 @@ int main()
     for (;;) {
         ps2_tick();
         uart_tick();
-        if (bit_is_set(PIND, PIND4))   // halt condition for vga
-            video_out((char) 0xfe);
+        if (!bit_is_set(PIND, PIND4)) {  // halt condition for vga
+            uart_putstr("HALT!");  // TODO - pgmspace
+            video_out(HALT_CHAR);
+            for (;;);
+        }
     }
 
     return 0;

@@ -10,7 +10,7 @@ static bool current = false;
 void video_out_init()
 {
     DDRB = 0xff;           // transmission line
-    DDRD |= (1 << PD5);    // data_new
+    DDRD |= (1 << DDD5);    // data_new
 }
 
 void video_out(char c)
