@@ -18,8 +18,8 @@ int main()
     if(MCUSR & (1<<EXTRF)) uart_putchar('#');
     MCUSR = 0;
 
-    DDRD |= (1 << PD6);
-    PORTD |= (1 << PD6);
+    DDRD &= ~(1 << DDD4);
+    PORTD |= (1 << PD4);
 
     _delay_ms(200);
     
@@ -34,6 +34,8 @@ int main()
     for (;;) {
         ps2_tick();
         uart_tick();
+        if (bit_is_set(PIND, PIND4))   // halt condition for vga
+            video_out((char) 0xfe);
     }
 
     return 0;

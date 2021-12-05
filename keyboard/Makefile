@@ -1,6 +1,6 @@
 PROJECT=fortuna-terminal-keyboard
 OBJECTS=main.o uart.o ps2.o videoout.o
-AVRDUDE_FLAGS=-p attiny2313 -C +./avrdude_gpio.conf -c pi_1 -B 0.5 -V
+AVRDUDE_FLAGS=-p attiny2313 -C +./avrdude_gpio.conf -c pi_rst -B 0.5 -V
 FUSES=-U efuse:w:0xff:m -U hfuse:w:0xdf:m -U lfuse:w:0x60:m   # external clock from VGA uc, divide by 8
 ROLLBACK_FUSES=-U lfuse:w:0x64:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
 MCU=attiny2313a

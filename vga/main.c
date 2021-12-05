@@ -84,6 +84,16 @@ void setup()
   memset((void*)vram, ' ', WIDTH * HEIGHT);   // clear the entire VRAM
 }
 
+void halt_execution()
+{
+  cli();
+  DDRB = 0x0;
+  TCNT0 = 0;
+  TCNT1 = 0;
+  TCNT2 = 0;
+  for (;;);
+}
+
 void loop()
 {
   if ((frames & 63) == 32) if (col < WIDTH) vram[row][col] |= 0b10000000;
@@ -231,6 +241,9 @@ void ProcessChar(unsigned char inbyte)                    // processes a charact
       case 8:                                   // Sonderzeichen 'BACKSPACE' abfangen
         if (col > 0) vram[row][--col] = 32;
         else if (row != start) { if (row > 0) row--; else row = HEIGHT-1; vram[row][WIDTH-1] = 32; col = WIDTH-1; }
+        break;
+      case 0xfe:
+        halt_execution();
         break;
       default:
         if (inbyte >= 32)                       // start of printable characters
